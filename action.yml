@@ -1,0 +1,32 @@
+name: slack
+description: Update slack notification
+
+inputs:
+  channel:
+    description: 'Slack channel'
+    type: string
+    required: true
+
+  ts:
+    description: 'Timestamp of the message'
+    type: string
+    required: true
+
+  id:
+    description: 'Block id to modify'
+    type: string
+    required: true
+
+  new-status:
+    description: 'New status for the field'
+    type: string
+    required: true
+
+  index:
+    description: 'Field index to modify'
+    type: string
+    required: false
+
+runs:
+  using: node20
+  main: dist/index.js
