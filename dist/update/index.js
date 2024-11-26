@@ -200,6 +200,7 @@ function run() {
         if (!status) {
             throw new Error('No `status` input supplied to the action');
         }
+        const maxRetries = parseInt(core.getInput('max-retries'));
         const slack = new slackapi.WebClient(slackToken);
         try {
             const git = yield gitSource.getSource({
@@ -210,7 +211,7 @@ function run() {
             });
             const refSpec = ['+refs/heads/*:refs/remotes/origin/*'];
             // comare-update loop
-            let retriesRemaining = 5;
+            let retriesRemaining = maxRetries;
             for (;;) {
                 yield git.fetch(refSpec, {});
                 yield git.execGit(['reset', '--hard', `origin/${branch}`], false, false, {});

@@ -42,6 +42,11 @@ inputs:
     type: string
     requried: true
 
+  max-retires:
+    description: 'Maximum conflict resolution tries'
+    type: string
+    default: 20
+
 runs:
   using: 'node20'
   main: '../dist/update/index.js'
