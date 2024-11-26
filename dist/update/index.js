@@ -215,6 +215,7 @@ function run() {
             for (;;) {
                 yield git.fetch(refSpec, {});
                 yield git.execGit(['reset', '--hard', `origin/${branch}`], false, false, {});
+                const baseCommit = yield git.execGit(['log', '-1', '--format=%H', `origin/${branch}`], false, false, {});
                 // load blocks
                 const blocks = JSON.parse(fs.readFileSync('.blocks/blocks.json').toString());
                 // modify blocks
@@ -225,15 +226,21 @@ function run() {
                 });
                 // write block changes
                 fs.writeFileSync('.blocks/blocks.json', JSON.stringify(blocks, null, 2));
+                // commit changes
+                yield git.execGit(['add', '-u', 'blocks.json'], false, false, {});
+                yield git.execGit(['commit', '-m', 'Update message queue'], false, false, {});
+                // early check for conflicts
+                const currentCommit = yield git.execGit(['log', '-1', '--format=%H', `origin/${branch}`], false, false, {});
+                if (currentCommit.stdout !== baseCommit.stdout) {
+                    console.log(`Detected early conflict ${currentCommit.stdout} != ${baseCommit.stdout}. Retrying...`);
+                    continue;
+                }
                 // update slack
                 yield slack.chat.update({
                     channel: channelId,
                     ts: ts,
                     blocks: blocks
                 });
-                // commit changes
-                yield git.execGit(['add', '-u', 'blocks.json'], false, false, {});
-                yield git.execGit(['commit', '-m', 'Update message queue'], false, false, {});
                 // attempt to push changes
                 try {
                     yield git.execGit(['push', 'origin', branch], false, false, {});

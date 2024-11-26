@@ -112,6 +112,7 @@ async function run() {
 
       await git.fetch(refSpec, {})
       await git.execGit(['reset', '--hard', `origin/${branch}`], false, false, {})
+      const baseCommit = await git.execGit(['log', '-1', '--format=%H', `origin/${branch}`], false, false, {})
 
       // load blocks
       const blocks = JSON.parse(fs.readFileSync('.blocks/blocks.json').toString())
@@ -126,16 +127,23 @@ async function run() {
       // write block changes
       fs.writeFileSync('.blocks/blocks.json', JSON.stringify(blocks, null, 2))
 
+      // commit changes
+      await git.execGit(['add', '-u', 'blocks.json'], false, false, {})
+      await git.execGit(['commit', '-m', 'Update message queue'], false, false, {})
+
+      // early check for conflicts
+      const currentCommit = await git.execGit(['log', '-1', '--format=%H', `origin/${branch}`], false, false, {})
+      if (currentCommit.stdout !== baseCommit.stdout) {
+        console.log(`Detected early conflict ${currentCommit.stdout} != ${baseCommit.stdout}. Retrying...`)
+        continue
+      }
+
       // update slack
       await slack.chat.update({
         channel: channelId,
         ts: ts,
         blocks: blocks as types.AnyBlock[]
       })
-
-      // commit changes
-      await git.execGit(['add', '-u', 'blocks.json'], false, false, {})
-      await git.execGit(['commit', '-m', 'Update message queue'], false, false, {})
 
       // attempt to push changes
       try {
