@@ -92,6 +92,8 @@ async function run() {
     throw new Error('No `status` input supplied to the action')
   }
 
+  const maxRetries = parseInt(core.getInput('max-retries'))
+
   const slack = new slackapi.WebClient(slackToken)
 
   try {
@@ -105,7 +107,7 @@ async function run() {
     const refSpec = ['+refs/heads/*:refs/remotes/origin/*']
 
     // comare-update loop
-    let retriesRemaining = 5
+    let retriesRemaining = maxRetries
     for (;;) {
 
       await git.fetch(refSpec, {})
