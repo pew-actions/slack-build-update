@@ -1,0 +1,26 @@
+name: 'Create a new slack message queue'
+description: 'Creates a slack message queue using git to resolve conflicts'
+
+inputs:
+  git-token:
+    description: 'GitHub token'
+    type: string
+    required: true
+
+  blocks:
+    description: 'Slack block kit blocks to initialize the queue'
+    type: string
+    required: true
+
+  repository:
+    description: 'GitHub repository to use for the slack queue'
+    type: string
+    default: 'PlayEveryWare/build-slack-message-queue'
+
+outputs:
+  branch-name:
+    description: 'Name of the branch for the new message queue'
+
+runs:
+  using: 'node20'
+  main: '../dist/create/index.js'

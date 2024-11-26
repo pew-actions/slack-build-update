@@ -1,0 +1,48 @@
+name: 'Update a new slack message queue'
+description: 'Updates an existing slack message queue using git to resolve conflicts'
+
+inputs:
+  git-token:
+    description: 'GitHub token'
+    type: string
+    required: true
+
+  repository:
+    description: 'GitHub repository to use for the slack queue'
+    type: string
+    default: 'PlayEveryWare/build-slack-message-queue'
+
+  channel-id:
+    description: 'Slack channel id'
+    type: string
+    required: true
+
+  ts:
+    description: 'Slack message timestamp'
+    type: string
+    required: true
+
+  branch:
+    description: 'Branch name of the queue'
+    type: string
+    required: true
+
+  block-id:
+    description: 'Id of the block to modify'
+    type: string
+    required: true
+
+  block-index:
+    description: 'Index of the field to modify'
+    type: string
+    required: true
+
+  status:
+    description: 'New field status'
+    type: string
+    requried: true
+
+runs:
+  using: 'node20'
+  main: '../dist/update/index.js'
+
