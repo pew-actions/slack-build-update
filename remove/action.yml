@@ -1,0 +1,24 @@
+name: 'Remove slack message queue'
+description: 'Remove an existing slack message queue from git'
+
+inputs:
+  git-token:
+    description: 'GitHub token'
+    type: string
+    required: true
+
+  repository:
+    description: 'GitHub repository to use for the slack queue'
+    type: string
+    default: 'PlayEveryWare/build-slack-message-queue'
+
+  branch:
+    description: 'Branch name of the queue'
+    type: string
+    required: true
+
+runs:
+  using: 'node20'
+  main: '../dist/remove/index.js'
+
+
