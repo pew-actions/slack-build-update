@@ -120,7 +120,6 @@ async function run() {
     let retriesRemaining = maxRetries
     for (;;) {
 
-      await git.fetch(refSpec, {})
       await git.execGit(['reset', '--hard', `origin/${branch}`], false, false, {})
       const baseCommit = await git.execGit(['log', '-1', '--format=%H', `origin/${branch}`], false, false, {})
 
@@ -151,6 +150,7 @@ async function run() {
       await git.execGit(['commit', '-m', 'Update message queue'], false, false, {})
 
       // early check for conflicts
+      await git.fetch(refSpec, {})
       const currentCommit = await git.execGit(['log', '-1', '--format=%H', `origin/${branch}`], false, false, {})
       if (currentCommit.stdout !== baseCommit.stdout) {
         console.log(`Detected early conflict ${currentCommit.stdout} != ${baseCommit.stdout}. Retrying...`)
