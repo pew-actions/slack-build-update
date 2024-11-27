@@ -3,6 +3,7 @@ import * as fs from 'fs'
 import * as gitSource from './git-source'
 import * as slackapi from '@slack/web-api'
 import * as types from '@slack/types'
+import deepEqual from 'deep-equal';
 
 type UpdateOpts = {
   blockId: string
@@ -124,7 +125,9 @@ async function run() {
       const baseCommit = await git.execGit(['log', '-1', '--format=%H', `origin/${branch}`], false, false, {})
 
       // load blocks
-      const blocks = JSON.parse(fs.readFileSync('.blocks/blocks.json').toString())
+      const oldBlocksRaw = fs.readFileSync('.blocks/blocks.json').toString()
+      const oldBlocks = JSON.parse(oldBlocksRaw)
+      const blocks = JSON.parse(oldBlocksRaw)
 
       // modify blocks
       updateBlocks(blocks, {
@@ -133,6 +136,12 @@ async function run() {
         status: status,
         pattern: matchStatus,
       })
+
+      // skip unchanges blocks
+      if (deepEqual(oldBlocks, blocks)) {
+        console.log('Blocks have not changed, skipping')
+        break
+      }
 
       // write block changes
       fs.writeFileSync('.blocks/blocks.json', JSON.stringify(blocks, null, 2))
