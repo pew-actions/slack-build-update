@@ -157,11 +157,16 @@ function updateBlocks(blocks, opts) {
     if (opts.blockIndex === -1) {
         // mofify every other field
         for (let index = 1; index < fields.length; index += 2) {
-            fields[index].text = opts.status;
+            if (!opts.pattern || fields[index].text.match(opts.pattern)) {
+                fields[index].text = opts.status;
+            }
         }
     }
     else {
-        fields[opts.blockIndex * 2 + 1].text = opts.status;
+        const index = opts.blockIndex * 2 + 1;
+        if (!opts.pattern || fields[index].text.match(opts.pattern)) {
+            fields[index].text = opts.status;
+        }
     }
 }
 function run() {
@@ -200,6 +205,8 @@ function run() {
         if (!status) {
             throw new Error('No `status` input supplied to the action');
         }
+        const matchStatusRaw = core.getInput('match-status');
+        const matchStatus = matchStatusRaw ? new RegExp(matchStatusRaw) : undefined;
         const maxRetries = parseInt(core.getInput('max-retries'));
         const slack = new slackapi.WebClient(slackToken);
         try {
@@ -223,6 +230,7 @@ function run() {
                     blockId: blockId,
                     blockIndex: blockIndex,
                     status: status,
+                    pattern: matchStatus,
                 });
                 // write block changes
                 fs.writeFileSync('.blocks/blocks.json', JSON.stringify(blocks, null, 2));

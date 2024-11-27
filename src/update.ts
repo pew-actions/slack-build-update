@@ -8,6 +8,7 @@ type UpdateOpts = {
   blockId: string
   blockIndex: number
   status: string
+  pattern?: RegExp
 }
 
 interface Field {
@@ -40,10 +41,15 @@ function updateBlocks(blocks: Block[], opts: UpdateOpts) {
   if (opts.blockIndex === -1) {
     // mofify every other field
     for (let index = 1; index < fields.length; index += 2) {
-      fields[index].text = opts.status
+      if (!opts.pattern || fields[index].text!.match(opts.pattern)) {
+        fields[index].text = opts.status
+      }
     }
   } else {
-    fields[opts.blockIndex*2 + 1].text = opts.status
+    const index = opts.blockIndex*2 + 1
+    if (!opts.pattern || fields[index].text!.match(opts.pattern)) {
+      fields[index].text = opts.status
+    }
   }
 }
 
@@ -92,6 +98,9 @@ async function run() {
     throw new Error('No `status` input supplied to the action')
   }
 
+  const matchStatusRaw: string = core.getInput('match-status')
+  const matchStatus: RegExp | undefined = matchStatusRaw ? new RegExp(matchStatusRaw) : undefined
+
   const maxRetries = parseInt(core.getInput('max-retries'))
 
   const slack = new slackapi.WebClient(slackToken)
@@ -122,6 +131,7 @@ async function run() {
         blockId: blockId,
         blockIndex: blockIndex,
         status: status,
+        pattern: matchStatus,
       })
 
       // write block changes
