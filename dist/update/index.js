@@ -145,33 +145,39 @@ const slackapi = __importStar(__nccwpck_require__(431));
 const deep_equal_1 = __importDefault(__nccwpck_require__(3414));
 function updateBlocks(blocks, opts) {
     // find our block
-    let block = undefined;
+    const matchingBlocks = [];
     for (const iter of blocks) {
-        if (iter.block_id === opts.blockId) {
-            block = iter;
+        if (iter.block_id && iter.block_id.match(opts.blockPattern)) {
+            matchingBlocks.push(iter);
         }
     }
-    if (!block) {
-        throw new Error(`Failed to find block with id '${opts.blockId}'`);
+    if (matchingBlocks.length === 0) {
+        throw new Error(`Failed to find blocks matching '${opts.blockPattern}'`);
     }
-    const fields = block.fields;
-    if (!fields) {
-        throw new Error(`Block '${opts.blockId}' does not contain fields`);
-    }
-    if (opts.blockIndex === -1) {
-        // mofify every other field
-        for (let index = 1; index < fields.length; index += 2) {
-            if (!opts.pattern || fields[index].text.match(opts.pattern)) {
+    for (const block of matchingBlocks) {
+        const fields = block.fields;
+        if (!fields) {
+            throw new Error(`Block '${block.block_id}' does not contain fields`);
+        }
+        if (opts.blockIndex === -1) {
+            // mofify every other field
+            for (let index = 1; index < fields.length; index += 2) {
+                if (!opts.statusPattern || fields[index].text.match(opts.statusPattern)) {
+                    fields[index].text = opts.status;
+                }
+            }
+        }
+        else {
+            const index = opts.blockIndex * 2 + 1;
+            if (!opts.statusPattern || fields[index].text.match(opts.statusPattern)) {
                 fields[index].text = opts.status;
             }
         }
     }
-    else {
-        const index = opts.blockIndex * 2 + 1;
-        if (!opts.pattern || fields[index].text.match(opts.pattern)) {
-            fields[index].text = opts.status;
-        }
-    }
+}
+function regexpExact(str) {
+    const pattern = str.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&');
+    return new RegExp(`^${pattern}$`);
 }
 function run() {
     return __awaiter(this, void 0, void 0, function* () {
@@ -200,9 +206,14 @@ function run() {
             throw new Error('No `branch` input supplied to the action');
         }
         const blockId = core.getInput('block-id');
-        if (!blockId) {
-            throw new Error('No `block-id` input supplied to the action');
+        const blockRegexpRaw = core.getInput('block-regexp');
+        if (!blockId && !blockRegexpRaw) {
+            throw new Error('Neither `block-id` or `block-rexexp` inputs supplied to the action');
         }
+        else if (blockId && blockRegexpRaw) {
+            throw new Error('Cannot supply both `block-id` and `block-regexp` inputs to the action');
+        }
+        const blockPattern = blockRegexpRaw ? new RegExp(blockRegexpRaw) : regexpExact(blockId);
         const indexRaw = core.getInput('block-index') || '-1';
         const blockIndex = parseInt(indexRaw);
         const status = core.getInput('status');
@@ -232,10 +243,10 @@ function run() {
                 const blocks = JSON.parse(oldBlocksRaw);
                 // modify blocks
                 updateBlocks(blocks, {
-                    blockId: blockId,
+                    blockPattern: blockPattern,
                     blockIndex: blockIndex,
                     status: status,
-                    pattern: matchStatus,
+                    statusPattern: matchStatus,
                 });
                 // skip unchanges blocks
                 if ((0, deep_equal_1.default)(oldBlocks, blocks)) {

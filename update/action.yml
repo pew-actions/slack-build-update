@@ -30,7 +30,10 @@ inputs:
   block-id:
     description: 'Id of the block to modify'
     type: string
-    required: true
+
+  block-regexp:
+    description: 'Regexp for block ids'
+    type: string
 
   block-index:
     description: 'Index of the field to modify'
