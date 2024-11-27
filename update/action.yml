@@ -42,6 +42,10 @@ inputs:
     type: string
     requried: true
 
+  match-status:
+    description: 'Regex of statuses to match and replace'
+    type: string
+
   max-retires:
     description: 'Maximum conflict resolution tries'
     type: string
