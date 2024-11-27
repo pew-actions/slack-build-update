@@ -224,7 +224,6 @@ function run() {
             // comare-update loop
             let retriesRemaining = maxRetries;
             for (;;) {
-                yield git.fetch(refSpec, {});
                 yield git.execGit(['reset', '--hard', `origin/${branch}`], false, false, {});
                 const baseCommit = yield git.execGit(['log', '-1', '--format=%H', `origin/${branch}`], false, false, {});
                 // load blocks
@@ -249,6 +248,7 @@ function run() {
                 yield git.execGit(['add', '-u', 'blocks.json'], false, false, {});
                 yield git.execGit(['commit', '-m', 'Update message queue'], false, false, {});
                 // early check for conflicts
+                yield git.fetch(refSpec, {});
                 const currentCommit = yield git.execGit(['log', '-1', '--format=%H', `origin/${branch}`], false, false, {});
                 if (currentCommit.stdout !== baseCommit.stdout) {
                     console.log(`Detected early conflict ${currentCommit.stdout} != ${baseCommit.stdout}. Retrying...`);
