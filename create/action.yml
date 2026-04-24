@@ -22,5 +22,5 @@ outputs:
     description: 'Name of the branch for the new message queue'
 
 runs:
-  using: 'node20'
+  using: 'node24'
   main: '../dist/create/index.js'
